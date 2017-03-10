@@ -1,16 +1,20 @@
 #Magic Enum
 
-Magic Enum is a better Enum for Python.
+####Magic Enum is a better Enum for Python.
 
-```python
+An Enum can be initialized like either of these:
+
+```
+class TrafficLight(Enum):
+    red
+    amber
+    green
+    
 class Colour(Enum):
-    red,
-    blue,
-    green,
-    yellow
+    red, blue, yellow
 ```
 
-Magic Enum constants have all the goodies you'd expect from a regular enum:
+Enum constants have all the goodies you'd expect from a regular enum:
 
 ```
 >>> Colour.red == Colour.blue
@@ -32,6 +36,13 @@ Colour.green
 Colour.yellow
 ```
 
+Involving some arcane magic under the hood:
+```
+>>> next(TrafficLight.red)
+TrafficLight.amber
+```
+
+
 They've got a type that makes sense:
 
 ```
@@ -41,13 +52,6 @@ True
 <class 'Colour' at 0x7fe78a8000e8>
 ```
 
-By convention, they're initialised like this (commas optional!):
 
-```
-class TrafficLight(Enum):
-    red,
-    amber,
-    green
-```
 
-Comprehensive tests can be found in `testing.py`.
+And more tests can be found in `testing.py`. Enjoy!

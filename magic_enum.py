@@ -1,4 +1,4 @@
-from itertools import filterfalse, count as itercount
+from itertools import filterfalse, count as itercount, chain as iterchain, cycle as itercycle
 from collections import defaultdict
 from operator import itemgetter
 from functools import total_ordering
@@ -20,6 +20,29 @@ class EnumConstant:
         self.name = name
         self.enum = enum
         self.value = value
+
+    def __next__(self):
+        """
+        Overriding this method allows us to call next(SomeEnum.X) and
+        get the next constant along (e.g. SomeEnum.Y).
+        """
+        # Iterate through our Enum, i.e. each Constant in order.
+        next_enum_values = itercycle(type(self))
+
+        # Enable ourselves to iterate in a two-item sliding window.
+        enum_values = iterchain([None], next_enum_values)
+
+        # If we're the current Constant, return the next one.
+        for this, next_ in zip(enum_values, next_enum_values):
+            if this == self:
+                break
+
+        # Or if we don't find the current Constant, something's VERY wrong.
+        else:
+            raise AttributeError("Something went badly wrong!")
+
+        # Return the next one along in the series.
+        return next_
 
     def __str__(self):
         return self.enum + "." + self.name

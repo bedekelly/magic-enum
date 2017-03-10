@@ -12,7 +12,7 @@ class Colour(Enum):
 
 class TrafficLight(Enum):
     red,
-    yellow,
+    amber,
     green
 
 
@@ -87,6 +87,18 @@ def test_attribute_setting(t):
     """
     def try_setting_attribute(): Colour.green = "Hello, world!"
     t.check_raises(try_setting_attribute, AttributeError)
+
+
+@case
+def test_next(t):
+    """Calling `next()` on an Enum constant should give the next one along."""
+    t.check_equal(next(TrafficLight.red), TrafficLight.amber)
+
+
+@case
+def test_next_cycle(t):
+    """Calling `next()` on the *last* Enum constant should give the first."""
+    t.check_equal(next(TrafficLight.green), TrafficLight.red)
 
 
 tests.run_all()
