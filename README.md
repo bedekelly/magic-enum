@@ -49,3 +49,5 @@ class TrafficLight(Enum):
     amber,
     green
 ```
+
+Comprehensive tests can be found in `testing.py`.
