@@ -52,6 +52,13 @@ True
 <class 'Colour' at 0x7fe78a8000e8>
 ```
 
+And the type is meaningful, too:
+
+```python
+>>> Colour.red != TrafficLight.red
+True
+```
+
 
 
 And more tests can be found in [testing.py](https://github.com/bedekelly/magic-enum/blob/master/testing.py). Enjoy!
