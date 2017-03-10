@@ -4,7 +4,7 @@
 
 An Enum can be initialized like either of these:
 
-```
+```python
 class TrafficLight(Enum):
     red
     amber
@@ -16,7 +16,7 @@ class Colour(Enum):
 
 Enum constants have all the goodies you'd expect from a regular enum:
 
-```
+```python
 >>> Colour.red == Colour.blue
 False
 
@@ -26,7 +26,7 @@ True
 
 But they've also got some tricks up their sleeves:
 
-```
+```python
 >>> for c in Colour:
 ...     print(c)
 ... 
@@ -37,7 +37,7 @@ Colour.yellow
 ```
 
 Involving some arcane magic under the hood:
-```
+```python
 >>> next(TrafficLight.red)
 TrafficLight.amber
 ```
@@ -45,7 +45,7 @@ TrafficLight.amber
 
 They've got a type that makes sense:
 
-```
+```python
 >>> type(Colour.blue) == Colour
 True
 >>> type(Colour.blue)
