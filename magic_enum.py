@@ -14,7 +14,8 @@ class EnumConstant:
     """
     An EnumConstant is, for example, something like Colour.RED.
     This class defines some basic properties for enum constants,
-    like how they should compare equal to one
+    like how they should compare equal to one another and how
+    they should be next-able, hash-able, str-able etc.
     """
     def __init__(self, name, enum, value):
         self.name = name
