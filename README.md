@@ -54,4 +54,4 @@ True
 
 
 
-And more tests can be found in `testing.py`. Enjoy!
+And more tests can be found in [testing.py](https://github.com/bedekelly/magic-enum/blob/master/testing.py). Enjoy!
