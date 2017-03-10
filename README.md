@@ -36,7 +36,7 @@ Colour.green
 Colour.yellow
 ```
 
-Involving some arcane magic under the hood:
+Like this one, inspired by the C++ enum's increment overloading:
 ```python
 >>> next(TrafficLight.red)
 TrafficLight.amber
