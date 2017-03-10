@@ -87,10 +87,12 @@ class MetaEnum(type):
         """
         When it comes time to actually creating the class, convert
         our defaultdict into a regular dict -- this is so that we
-        can raise a proper exception if a constant isn't fount.
+        can raise a proper exception if a constant isn't found.
 
         This is also a good place to build up our own internal
-        "classdict": instead of mapping the real values,
+        "classdict": instead of mapping the real values, we make
+        a new enum of the given type and store it in a `_members`
+        field on the enum class.
         """
 
         # Make sure we raise a proper exception if an element isn't found.
