@@ -11,7 +11,7 @@ class TrafficLight(Enum):
     green
     
 class Colour(Enum):
-    red, blue, yellow
+    red, blue, green, yellow
 ```
 
 Enum constants have all the goodies you'd expect from a regular enum:
