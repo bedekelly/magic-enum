@@ -72,13 +72,17 @@ class EnumConstant:
 
 class MetaEnum(type):
 
-    @classmethod
-    def __prepare__(mcs, name, bases):
+    def __prepare__(self, bases, **kwargs):
         """
         Return a dictionary-like object which assigns a new integer
         to every successive enum constant. This is used for the
         initial class dictionary, where a bare "red" inside the class
         body of a "Colour" enum is treated as a dictionary lookup.
+
+        N.B. for future use: although PyCharm complains if the first
+        parameter isn't called "self", it should really be called
+        "name", as it's the name of the class we're creating a
+        namespace for.
         """
         counter = itercount()
         return defaultdict(lambda: next(counter))
