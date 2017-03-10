@@ -125,6 +125,11 @@ class MetaEnum(type):
         return iter(sorted(self._members.values()))
 
     def __setattr__(self, key, value):
+        """
+        Make sure that it's not possible to set an Enum's values
+        after its initial creation.
+        """
+        # Note that here, "_members" is treated as special!
         if is_special(key):
             return super().__setattr__(key, value)
         raise AttributeError("Can't set attributes on an Enum!")
