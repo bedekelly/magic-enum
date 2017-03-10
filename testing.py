@@ -1,5 +1,3 @@
-# Make a couple of Enums to play around with.
-
 from magic_enum import Enum
 from minitools.test import tests, case
 
