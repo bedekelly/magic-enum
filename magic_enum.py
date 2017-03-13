@@ -1,7 +1,11 @@
-from itertools import filterfalse, count as itercount, chain as iterchain, cycle as itercycle
-from collections import defaultdict
+from itertools import (
+    filterfalse, count as itercount, chain as iterchain,
+    cycle as itercycle, tee as itertee
+)
+from collections import defaultdict, namedtuple, OrderedDict
 from operator import itemgetter
 from functools import total_ordering
+import inspect  # Oh no...
 
 
 def is_special(name):
@@ -17,10 +21,15 @@ class EnumConstant:
     like how they should compare equal to one another and how
     they should be next-able, hash-able, str-able etc.
     """
-    def __init__(self, name, enum, value):
+    def __init__(self, name, enum, value, implicit_value):
         self.name = name
-        self.enum = enum
+        self.enum_name = enum
         self.value = value
+        self.implicit = value is None
+        self.implicit_value = implicit_value
+
+    def __or__(self, other):
+        return EnumConstantDisjunction(other, self)
 
     def __next__(self):
         """
@@ -28,13 +37,14 @@ class EnumConstant:
         get the next constant along (e.g. SomeEnum.Y).
         """
         # Iterate through our Enum, i.e. each Constant in order.
-        next_enum_values = itercycle(type(self))
+        enum_values = itercycle(type(self))
+        this_values, next_values = itertee(enum_values, 2)
 
         # Enable ourselves to iterate in a two-item sliding window.
-        enum_values = iterchain([None], next_enum_values)
+        this_values = iterchain([None], iter(this_values))
 
         # If we're the current Constant, return the next one.
-        for this, next_ in zip(enum_values, next_enum_values):
+        for this, next_ in zip(this_values, next_values):
             if this == self:
                 break
 
@@ -46,7 +56,15 @@ class EnumConstant:
         return next_
 
     def __str__(self):
-        return self.enum + "." + self.name
+        """
+        The string representation of an EnumConstant should include
+        the value, but only if that value has been manually set --
+        not if it's been generated implicitly.
+        """
+        display = f"{self.enum_name}.{self.name}"
+        if not self.implicit:
+            display += f"(value={repr(self.value)})"
+        return display
 
     def __repr__(self):
         return str(self)
@@ -65,28 +83,96 @@ class EnumConstant:
         return id(self) == id(other)
 
     def __lt__(self, other):
-        return self.value < other.value
+        """
+        If integer values are provided, order results by those.
+        Otherwise, use the order in which the constants are defined.
+        """
+        if isinstance(self.value, int):
+            return self.value < other.value
+        return self.implicit_value < other.implicit_value
 
     def __hash__(self):
         return hash(self.value)
 
 
+NameValue = namedtuple("NameValue", "name value implicit_value")
+
+
+class EnumDefaultNamespace:
+    """
+    This is an alternative to defaultdict, which allocates an implicit
+    ordering value to each referenced value -- whether it's been added
+    manually or just referenced implicitly.
+
+    We use an instance of this class for the namespace of our Enum,
+    before the values are finalized.
+    """
+
+    def __init__(self, sequence):
+        self.namespace = {}
+        self.sequence = sequence
+
+    def __setitem__(self, key, value):
+        """
+        Be careful with this! This method is called when we're setting
+        values for the enum constants, but it's also called by Python
+        internals for special methods.
+
+        Luckily we can mitigate any nasty side-effects by just checking
+        if the name being assigned is "special" (i.e. potentially a
+        Python internal).
+        """
+        if is_special(key):
+            self.namespace[key] = value
+
+        # Assume here that we're setting a default value.
+        else:
+            # This was a nasty bug: make the assumption that if the value
+            # provided is a tuple with a single element, it's probably just
+            # someone ending each line with a comma.
+            if isinstance(value, tuple) and len(value) == 1:
+                value = value[0]
+
+            # Wrap our name and value in a NameValue instance and attach
+            # the next element from our generator.
+            self.namespace[key] = NameValue(key, value, next(self.sequence))
+
+    def __getitem__(self, key):
+        """
+        We can make a pretty safe assumption that if we're looking up
+        a value in this namespace, what we're *actually* doing is
+        defining constants inside an Enum class.
+        """
+
+        # Todo: investigate whether there's an assignment!
+
+        # Scary stuff: pop back a couple of stack frames so we can see
+        # where the enum values are being defined.
+        frame = inspect.currentframe()
+        frame = frame.f_back.f_back
+
+        # Assumption: if we're trying to lookup a value, and that value
+        # appears in the locals or the globals of the frame in which the
+        # enum constant is being defined, we're explicitly assigning a
+        # value to an enum constant. If, however, it doesn't appear, we
+        # want to define a new enum constant.
+        if key in frame.f_locals:
+            return frame.f_locals[key]
+        if key in frame.f_globals:
+            return frame.f_globals[key]
+
+        # We can't find the name, so we'll define a new enum constant.
+        name_value = NameValue(key, None, next(self.sequence))
+        self.namespace[key] = name_value
+        return name_value
+
+
 class MetaEnum(type):
-
-    def __prepare__(self, bases, **kwargs):
-        """
-        Return a dictionary-like object which assigns a new integer
-        to every successive enum constant. This is used for the
-        initial class dictionary, where a bare "red" inside the class
-        body of a "Colour" enum is treated as a dictionary lookup.
-
-        N.B. for future use: although PyCharm complains if the first
-        parameter isn't called "self", it should really be called
-        "name", as it's the name of the class we're creating a
-        namespace for.
-        """
-        counter = itercount()
-        return defaultdict(lambda: next(counter))
+    """
+    The MetaEnum class does a lot of the scary meta-stuff around
+    patching the default namespace of the Enum class, making sure
+    the Enum classes are iterable etc.
+    """
 
     def __new__(mcs, name, bases, classdict):
         """
@@ -101,27 +187,47 @@ class MetaEnum(type):
         """
 
         # Make sure we raise a proper exception if an element isn't found.
-        classdict = dict(classdict)
+        classdict = classdict.namespace
 
         # Get an instance of the MetaEnum class, e.g. Colour or TrafficLight.
-        enum_class = super().__new__(mcs, name, bases, classdict)
+        EnumClass = super().__new__(mcs, name, bases, classdict)
 
         # Get a list of the requested names for enum constants.
         non_special_names = filterfalse(is_special, classdict.keys())
 
         # Initialize a 'members' dictionary in the enum class, to register
         # each instance of that enum.
-        enum_class._members = {}
+        EnumClass._members = {}
 
         # Create an instance of the enum for each enum constant:
         for const_name in non_special_names:
-            value = classdict[const_name]
-            constant = enum_class(name=const_name, enum=name, value=value)
+            const_name, value, implicit_value = classdict[const_name]
+
+            # Create an instance of the Enum.
+            constant = EnumClass(
+                name=const_name, enum=name, value=value,
+                implicit_value=implicit_value
+            )
 
             # Register the instance we've created with the enum class.
-            enum_class._members[const_name] = constant
+            EnumClass._members[const_name] = constant
 
-        return enum_class
+        return EnumClass
+
+    def __prepare__(self, bases, **kwargs):
+        """
+        Return a dictionary-like object which assigns a new integer
+        to every successive enum constant. This is used for the
+        initial class dictionary, where a bare "red" inside the class
+        body of a "Colour" enum is treated as a dictionary lookup.
+
+        N.B. for future use: although PyCharm complains if the first
+        parameter isn't called "self", it should really be called
+        "name", as it's the name of the class we're creating a
+        namespace for.
+        """
+        counter = itercount()
+        return EnumDefaultNamespace(counter)
 
     def __iter__(self):
         """

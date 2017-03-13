@@ -59,6 +59,33 @@ And the type is meaningful, too:
 True
 ```
 
+If you like, you can add values to the enum:
 
+```python
+class CarBrand(Enum):
+    Ford = 1
+    Toyota = 3
+    Mitsubishi = 2
+
+
+>>> for brand in CarBrand: print(brand)
+CarBrand.Ford(value=1)
+CarBrand.Mitsubishi(value=2)
+CarBrand.Toyota(value=3)
+```
+
+Note that the results will be returned in order of their values!
+
+(If the values aren't integers, we'll default to the order of insertion.)
+
+In order to check if a value is one of multiple enum constants, use the built-in `in` operator:
+
+```python
+>>> col = Colour.red
+>>> col in (Colour.blue, Colour.green, Colour.yellow)
+False
+>> col in (Colour.red, Colour.yellow)
+True
+```
 
 And more tests can be found in [testing.py](https://github.com/bedekelly/magic-enum/blob/master/testing.py). Enjoy!
