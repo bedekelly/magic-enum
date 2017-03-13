@@ -204,4 +204,20 @@ def test_in_operator(t):
     t.check_true(col in (Colour.red, Colour.yellow))
 
 
+@case
+def test_comma_assignment(t):
+    """
+    Try using the comma-separated syntax with assignments.
+    """
+    class Instruments(Enum):
+        Keyboard = "<keyboard>",
+        Guitar = "<guitar>",
+        Drums = "<drums>"
+
+    t.check_equal(
+        Instruments.Keyboard.value,
+        "<keyboard>"
+    )
+
+
 tests.run_all()
