@@ -88,4 +88,11 @@ False
 True
 ```
 
+It's also possible to use subscripting to get an enum constant, like so:
+
+```python
+>>> Colour["red"]
+Colour.red
+```
+
 And more tests can be found in [testing.py](https://github.com/bedekelly/magic-enum/blob/master/testing.py). Enjoy!

@@ -235,6 +235,13 @@ class MetaEnum(type):
         """
         return iter(sorted(self._members.values()))
 
+    def __getitem__(self, value):
+        """
+        Subscripting an Enum class should have the same effect
+        as a dot-syntax lookup.
+        """
+        return getattr(self, value)
+
     def __setattr__(self, key, value):
         """
         Make sure that it's not possible to set an Enum's values

@@ -220,4 +220,25 @@ def test_comma_assignment(t):
     )
 
 
+@case
+def test_indexing(t):
+    """
+    Indexing into an Enum class should give a constant.
+    """
+    colour = Colour["red"]
+    t.check_equal(colour, Colour.red)
+
+
+@case
+def test_indexing_nonexistent(t):
+    """
+    Indexing into an Enum class with a nonexistent constant
+    name should give an AttributeError.
+    """
+    t.check_raises(
+        lambda: Colour["beige"],
+        AttributeError
+    )
+
+
 tests.run_all()
