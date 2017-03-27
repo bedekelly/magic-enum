@@ -1,6 +1,6 @@
-#Magic Enum
+# Magic Enum
 
-####Magic Enum is a better Enum for Python.
+#### Magic Enum is a better Enum for Python.
 
 An Enum can be initialized like either of these:
 
